@@ -1,0 +1,5 @@
+aws-cdk-lib>=2.0.0
+constructs>=10.0.0
+strands-agents>=1.4.0
+strands-agents-tools>=0.2.3
+strands-agents-builder>=0.1.0
