@@ -23,6 +23,9 @@ class ChatApiStack(Stack):
             environment={
                 "REGION_NAME": "us-east-1",
                 "MODEL_ID": "anthropic.claude-3-sonnet-20240229-v1:0",
+                # Add these environment variables for your Knowledge Base
+                "KNOWLEDGE_BASE_ID": "YOUR_KNOWLEDGE_BASE_ID",  # Replace with actual ID
+                "KNOWLEDGE_BASE_DATA_SOURCE_ID": "YOUR_DATA_SOURCE_ID",  # Replace with actual ID
             }
         )
 
@@ -42,11 +45,37 @@ class ChatApiStack(Stack):
             )
         )
 
+        # Add Knowledge Base permissions to Lambda
+        chat_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "bedrock:Retrieve",
+                    "bedrock:RetrieveAndGenerate"
+                ],
+                resources=[
+                    f"arn:aws:bedrock:{self.region}:*:knowledge-base/*"
+                ]
+            )
+        )
+
+        # Add general Bedrock permissions for Knowledge Base operations
+        chat_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "bedrock:ListKnowledgeBases",
+                    "bedrock:GetKnowledgeBase"
+                ],
+                resources=["*"]
+            )
+        )
+
         # Create REST API Gateway
         api = apigw.RestApi(
             self, "ChatApi",
             rest_api_name="chat-api",
-            description="REST API for chat functionality with Claude AI and Strands",
+            description="REST API for chat functionality with Claude AI, Strands, and Harry Potter Knowledge Base",
             default_cors_preflight_options=apigw.CorsOptions(
                 allow_origins=apigw.Cors.ALL_ORIGINS,
                 allow_methods=apigw.Cors.ALL_METHODS,
@@ -78,8 +107,15 @@ class ChatApiStack(Stack):
         # Output the model information
         cdk.CfnOutput(
             self, "ModelInfo",
-            value=f"Claude 3 Sonnet via Amazon Bedrock with Strands in {self.region}",
-            description="AI Model being used"
+            value=f"Claude 3 Sonnet via Amazon Bedrock with Strands and Harry Potter Knowledge Base in {self.region}",
+            description="AI Model and Knowledge Base being used"
+        )
+
+        # Output Knowledge Base configuration status
+        cdk.CfnOutput(
+            self, "KnowledgeBaseStatus",
+            value="Configure environment variables KNOWLEDGE_BASE_ID and KNOWLEDGE_BASE_DATA_SOURCE_ID",
+            description="Knowledge Base configuration instructions"
         )
 
 
